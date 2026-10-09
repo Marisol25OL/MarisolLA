@@ -184,5 +184,8 @@ export interface CitizenReport {
   isSynced: boolean; // For offline support
   reportedBy?: string;
   userRole?: string;
+  assignedCrew?: string;
+  adminNotes?: string;
+  resolutionDate?: string;
 }
 

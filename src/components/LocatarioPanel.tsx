@@ -22,9 +22,12 @@ import {
   Send, 
   ShieldAlert,
   Compass,
-  Mic
+  Mic,
+  ShieldCheck,
+  ArrowRight
 } from 'lucide-react';
 import { CitizenReportModule } from './CitizenReportModule';
+import { AdminReportsPanel } from './AdminReportsPanel';
 import { toneGenerator, voiceService } from '../services/voiceAssistant';
 import { offlineManager } from '../services/offlineSync';
 
@@ -38,6 +41,9 @@ interface LocatarioPanelProps {
   userLocation: Coordinates;
   onAddReinforcementUnit: (routeId: string) => void;
   onViewReport?: (report: CitizenReport) => void;
+  onUpdateReport?: (report: CitizenReport) => void;
+  onPrintReport?: (report: CitizenReport) => void;
+  onOpenFullAdmin?: () => void;
 }
 
 export const LocatarioPanel: React.FC<LocatarioPanelProps> = ({
@@ -50,6 +56,9 @@ export const LocatarioPanel: React.FC<LocatarioPanelProps> = ({
   userLocation,
   onAddReinforcementUnit,
   onViewReport,
+  onUpdateReport,
+  onPrintReport,
+  onOpenFullAdmin,
 }) => {
   // Sub-tabs inside Locatario: Citizen Incidents vs Combi Overload
   const [activeSubTab, setActiveSubTab] = useState<'ciudadano' | 'sobrecupo'>('ciudadano');
@@ -260,62 +269,111 @@ export const LocatarioPanel: React.FC<LocatarioPanelProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Panel Locatario Header */}
+    <div className="space-y-5 sm:space-y-6 w-full max-w-5xl mx-auto">
+      {/* Panel Locatario Unified Header */}
       <div className="bg-slate-900 border border-emerald-700/60 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-slate-950 flex items-center justify-center font-black shadow-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-slate-950 flex items-center justify-center font-black shadow-lg shrink-0">
               <FileText className="w-6 h-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-base sm:text-lg font-black text-white">
                   Panel del Locatario & Ciudadano
                 </h2>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">
-                  ● PARTICIPACIÓN CIUDADANA
+                <span className="text-[9px] sm:text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 shrink-0">
+                  ● CIUDADANO
+                </span>
+                <span className="text-[9px] sm:text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 hidden xs:inline-block">
+                  VOZ & GPS
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
-                Módulo exclusivo para residentes y vecinos: reporta incidencias urbanas y sobrecupo de combis con fotos selladas y dictado por voz.
+              <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+                Reportes ciudadanos e incidencias de combis con fotos selladas y control administrativo de denuncias.
               </p>
             </div>
           </div>
 
-          {/* Sub-Tabs Switcher */}
-          <div className="inline-flex p-1 rounded-xl bg-slate-950 border border-slate-800 self-start sm:self-auto">
-            <button
-              type="button"
-              onClick={() => {
-                setActiveSubTab('ciudadano');
-                toneGenerator.playSuccessBeep();
-              }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition cursor-pointer ${
-                activeSubTab === 'ciudadano'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md font-black'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Reportes Ciudadanos (Voz 🎙️)</span>
-            </button>
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 flex-wrap">
+          </div>
+        </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                setActiveSubTab('sobrecupo');
-                toneGenerator.playSuccessBeep();
-              }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition cursor-pointer ${
-                activeSubTab === 'sobrecupo'
-                  ? 'bg-amber-500 text-slate-950 shadow-md font-black'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Bus className="w-3.5 h-3.5" />
-              <span>Reportes de Sobrecupo en Combis</span>
-            </button>
+        {/* Sub-Tabs Switcher - Perfectly Centered, Squared & Icon-Rich (2 Subtabs) */}
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 p-1.5 rounded-2xl bg-slate-950 border border-slate-800 gap-2 shadow-inner">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveSubTab('ciudadano');
+              toneGenerator.playSuccessBeep();
+            }}
+            className={`py-3 sm:py-2.5 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer active:scale-95 ${
+              activeSubTab === 'ciudadano'
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-lg font-black'
+                : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+            }`}
+          >
+            <span className="text-base shrink-0">📢</span>
+            <span className="truncate">1. Reportes Ciudadanos (Voz 🎙️)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveSubTab('sobrecupo');
+              toneGenerator.playSuccessBeep();
+            }}
+            className={`py-3 sm:py-2.5 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer active:scale-95 ${
+              activeSubTab === 'sobrecupo'
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg font-black'
+                : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+            }`}
+          >
+            <span className="text-base shrink-0">🚐</span>
+            <span className="truncate">2. Sobrecupo en Combis</span>
+          </button>
+        </div>
+
+        {/* 4-Box Metric Summary Strip with Friendly Color Indicators */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 pt-3 border-t border-slate-800 text-xs">
+          <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 flex items-center gap-3">
+            <span className="text-2xl shrink-0">📢</span>
+            <div>
+              <span className="text-[10px] text-slate-400 block uppercase font-bold">Incidencias</span>
+              <p className="font-extrabold text-emerald-400 font-mono text-sm">
+                {reports.filter(r => r.type !== 'sobrecupo').length} registradas
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 flex items-center gap-3">
+            <span className="text-2xl shrink-0">🚐</span>
+            <div>
+              <span className="text-[10px] text-slate-400 block uppercase font-bold">Sobrecupos</span>
+              <p className="font-extrabold text-amber-400 font-mono text-sm">
+                {reports.filter(r => r.type === 'sobrecupo').length} alertas
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 flex items-center gap-3">
+            <span className="text-2xl shrink-0">🟡</span>
+            <div>
+              <span className="text-[10px] text-amber-400 block uppercase font-bold">Pendientes</span>
+              <p className="font-extrabold text-amber-300 font-mono text-sm">
+                {reports.filter(r => r.status === 'recibido').length} por turnar
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 flex items-center gap-3">
+            <span className="text-2xl shrink-0">🟢</span>
+            <div>
+              <span className="text-[10px] text-emerald-400 block uppercase font-bold">Resueltas</span>
+              <p className="font-extrabold text-emerald-300 font-mono text-sm">
+                {reports.filter(r => r.status === 'resuelto').length} concluidas
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -403,20 +461,20 @@ export const LocatarioPanel: React.FC<LocatarioPanelProps> = ({
           )}
 
           {/* Form Card for Overload Report */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 space-y-5 shadow-xl">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 border-b border-slate-800 pb-3 sm:pb-4">
               <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                   <Camera className="w-5 h-5 text-amber-400" />
                   Emitir Reporte de Sobrecupo en Combi
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
                   Toma la fotografía de la parada o combi llena: se sellará con fecha, hora y coordenadas GPS oficiales.
                 </p>
               </div>
 
-              <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-amber-950 text-amber-300 border border-amber-800 self-start sm:self-auto">
-                EVIDENCIA PARA DESPACHO DE REFUERZO
+              <span className="text-[9px] sm:text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-amber-950 text-amber-300 border border-amber-800 self-start sm:self-auto">
+                DESPACHO DE REFUERZO
               </span>
             </div>
 
@@ -548,20 +606,20 @@ export const LocatarioPanel: React.FC<LocatarioPanelProps> = ({
                       Captura la evidencia fotográfica de la parada o combi saturada
                     </p>
 
-                    <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 items-center justify-center gap-2 pt-1">
                       <button
                         type="button"
                         onClick={startLiveCamera}
-                        className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer"
+                        className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer min-h-[44px] active:scale-95"
                       >
-                        <Camera className="w-4 h-4" />
+                        <Camera className="w-4 h-4 shrink-0" />
                         <span>Abrir Cámara en Vivo</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="bg-slate-800 hover:bg-slate-700 text-white font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1 transition cursor-pointer"
+                        className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold px-3 py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer min-h-[44px] active:scale-95"
                       >
                         <span>Subir Foto</span>
                       </button>
@@ -572,7 +630,7 @@ export const LocatarioPanel: React.FC<LocatarioPanelProps> = ({
                           const sample = 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80';
                           stampPhotoCanvas(sample);
                         }}
-                        className="bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-600/70 font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer"
+                        className="w-full bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-600/70 font-bold px-3 py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer min-h-[44px] active:scale-95"
                       >
                         <span>Foto con Sello GPS Actual</span>
                       </button>
@@ -591,14 +649,14 @@ export const LocatarioPanel: React.FC<LocatarioPanelProps> = ({
               </div>
             </div>
 
-            {/* Submit Action */}
-            <div className="pt-4 border-t border-slate-800 flex justify-end">
+            {/* Submit Action - Full-width and centered on mobile */}
+            <div className="pt-4 border-t border-slate-800">
               <button
                 type="button"
                 onClick={handleSubmitOverload}
-                className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs px-6 py-3 rounded-xl shadow-xl flex items-center justify-center gap-2 transition transform active:scale-98 cursor-pointer"
+                className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs sm:text-sm px-6 py-3.5 rounded-xl shadow-xl flex items-center justify-center gap-2 transition active:scale-98 cursor-pointer min-h-[48px]"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-4 h-4 shrink-0" />
                 <span>ENVIAR REPORTE DE SOBRECUPO & SOLICITAR REFUERZO</span>
               </button>
             </div>

@@ -340,96 +340,62 @@ export const CitizenReportModule: React.FC<CitizenReportModuleProps> = ({
   });
 
   return (
-    <div className="space-y-6">
-      {/* Header & New Report Action */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
-        <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <FileText className="w-6 h-6 text-cyan-400" />
-            Reporte Ciudadano & Impacto Social
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Plataforma directa para reportar incidencias georreferenciadas con evidencia fotográfica sellada con fecha, hora y coordenadas GPS.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={handleStartVoiceReport}
-            className={`px-4 py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg transition cursor-pointer shrink-0 ${
-              isVoiceListening
-                ? 'bg-red-500 text-white animate-pulse shadow-red-500/50'
-                : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
-            }`}
-            title="Activar micrófono para dictar reporte ciudadano"
-          >
-            {isVoiceListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-            <span>{isVoiceListening ? 'Detener Micrófono' : 'Dictar Reporte por Voz'}</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setShowFormModal(true);
-              setPhotoUrl(null);
-              setIsCameraActive(false);
-            }}
-            className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition transform active:scale-95 shrink-0"
-          >
-            <Camera className="w-4 h-4" />
-            <span>+ Nuevo Reporte con Foto</span>
-          </button>
-        </div>
-      </div>
-
-      {/* EXCLUSIVE VOICE REPORTING DOCK (Only available in Citizen Reports) */}
-      <div className="bg-gradient-to-r from-cyan-950/70 via-slate-900 to-blue-950/70 border-2 border-cyan-500/50 rounded-2xl p-4 shadow-xl space-y-3">
+    <div className="w-full space-y-4 sm:space-y-6">
+      {/* Primary Action Dock: Voice Dictation + New Report with Real Photo */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-3.5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg shadow-md transition ${
-              isVoiceListening ? 'bg-red-500 text-white animate-pulse' : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
-            }`}>
-              <Mic className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-black text-white">
-                  Modo de Voz Exclusivo para Reporte Ciudadano
-                </span>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">
-                  RECONOCIMIENTO ACTIVO
-                </span>
-              </div>
-              <p className="text-xs text-slate-400">
-                Dicta tu reporte por voz: la IA detecta la categoría, ubicación y redacta el informe oficial.
-              </p>
-            </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-2">
+              <Camera className="w-5 h-5 text-cyan-400 shrink-0" />
+              <span>Registrar Nueva Incidencia Ciudadana</span>
+            </h3>
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+              Sello oficial con fecha, hora y coordenadas GPS validadas para cuadrillas de Obras Públicas y C5i.
+            </p>
           </div>
 
-          <button
-            type="button"
-            onClick={handleStartVoiceReport}
-            className={`font-black text-xs px-4 py-2.5 rounded-xl shadow-lg flex items-center justify-center gap-2 transition cursor-pointer ${
-              isVoiceListening
-                ? 'bg-red-600 text-white animate-pulse'
-                : 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-slate-950'
-            }`}
-          >
-            {isVoiceListening ? <Radio className="w-4 h-4 animate-ping" /> : <Mic className="w-4 h-4" />}
-            <span>{isVoiceListening ? 'Escuchando en vivo...' : 'Hablar al Micrófono'}</span>
-          </button>
+          {/* Action Buttons - Centered and Squared on Mobile */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 w-full sm:w-auto shrink-0">
+            <button
+              type="button"
+              onClick={handleStartVoiceReport}
+              className={`w-full min-h-[46px] px-4 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 shadow-lg transition cursor-pointer active:scale-95 ${
+                isVoiceListening
+                  ? 'bg-red-500 text-white animate-pulse shadow-red-500/50'
+                  : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
+              }`}
+              title="Dictar reporte ciudadano por voz"
+            >
+              {isVoiceListening ? <Radio className="w-4 h-4 animate-ping shrink-0" /> : <Mic className="w-4 h-4 shrink-0" />}
+              <span>{isVoiceListening ? 'Escuchando en vivo...' : 'Dictar por Voz 🎙️'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowFormModal(true);
+                setPhotoUrl(null);
+                setIsCameraActive(false);
+              }}
+              className="w-full min-h-[46px] bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition active:scale-95 cursor-pointer"
+            >
+              <Camera className="w-4 h-4 shrink-0" />
+              <span>+ Nuevo Reporte</span>
+            </button>
+          </div>
         </div>
 
-        {/* Live transcription / feedback readout */}
+        {/* Live Audio Transcription / Interim Feedback Box */}
         {(isVoiceListening || voiceInterimText || voiceFeedback) && (
-          <div className="bg-slate-950/90 border border-cyan-700/60 rounded-xl p-3 text-xs space-y-1">
+          <div className="bg-slate-950/90 border border-cyan-700/60 rounded-xl p-3 text-xs space-y-1.5 animate-in fade-in duration-200">
             {isVoiceListening && (
               <div className="flex items-center gap-2 text-cyan-300 font-semibold animate-pulse">
-                <Radio className="w-3.5 h-3.5" />
-                <span>Escuchando... Di algo como: "Reportar bache en calle Galeana" o "Avistamiento de cocodrilo en el puente"</span>
+                <Radio className="w-3.5 h-3.5 shrink-0" />
+                <span>Escuchando... Di: "Reportar bache en calle Galeana" o "Alumbrado descompuesto"</span>
               </div>
             )}
             {voiceInterimText && (
-              <p className="text-white font-mono bg-slate-900 p-2 rounded border border-slate-800">
+              <p className="text-white font-mono bg-slate-900 p-2.5 rounded-lg border border-slate-800">
                 "{voiceInterimText}"
               </p>
             )}
@@ -441,34 +407,38 @@ export const CitizenReportModule: React.FC<CitizenReportModuleProps> = ({
           </div>
         )}
 
-        {/* Quick Voice Shortcut Buttons */}
-        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800 text-[11px]">
-          <span className="text-slate-400 font-semibold">Dictado rápido:</span>
-          {[
-            { label: '🕳️ Dictar Bache', phrase: 'Reporte de bache profundo sobre avenida principal en Lázaro Cárdenas' },
-            { label: '💡 Dictar Alumbrado', phrase: 'Luminaria fundida y calle a oscuras sin alumbrado público' },
-            { label: '🐊 Dictar Cocodrilo', phrase: 'Avistamiento de cocodrilo cerca del estero en zona urbana' },
-            { label: '🚦 Dictar Semáforo', phrase: 'Semáforo descompuesto con luces intermitentes en cruce' },
-          ].map((item, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => {
-                toneGenerator.playSuccessBeep();
-                setDescription(item.phrase);
-                setTitle(item.label.slice(3) + ' (Dictado por Voz)');
-                if (item.label.includes('Bache')) setSelectedType('baches');
-                if (item.label.includes('Alumbrado')) setSelectedType('alumbrado');
-                if (item.label.includes('Cocodrilo')) setSelectedType('cocodrilos');
-                if (item.label.includes('Semáforo')) setSelectedType('semaforos');
-                setShowFormModal(true);
-                voiceService.speak(`Dictado cargado para ${item.label.slice(3)}. Puedes verificar y confirmar.`);
-              }}
-              className="bg-slate-950/80 hover:bg-slate-800 text-slate-300 hover:text-cyan-300 px-2.5 py-1 rounded-lg border border-slate-800 transition cursor-pointer"
-            >
-              {item.label}
-            </button>
-          ))}
+        {/* Quick Voice Shortcut Buttons - Centered 4-column Grid */}
+        <div className="pt-2 border-t border-slate-800 space-y-1.5">
+          <span className="text-[11px] font-bold text-slate-400 block">
+            ⚡ Dictado rápido por categoría:
+          </span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {[
+              { label: '🕳️ Dictar Bache', phrase: 'Reporte de bache profundo sobre avenida principal en Lázaro Cárdenas' },
+              { label: '💡 Dictar Alumbrado', phrase: 'Luminaria fundida y calle a oscuras sin alumbrado público' },
+              { label: '🐊 Dictar Cocodrilo', phrase: 'Avistamiento de cocodrilo cerca del estero en zona urbana' },
+              { label: '🚦 Dictar Semáforo', phrase: 'Semáforo descompuesto con luces intermitentes en cruce' },
+            ].map((item, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => {
+                  toneGenerator.playSuccessBeep();
+                  setDescription(item.phrase);
+                  setTitle(item.label.slice(3) + ' (Dictado por Voz)');
+                  if (item.label.includes('Bache')) setSelectedType('baches');
+                  if (item.label.includes('Alumbrado')) setSelectedType('alumbrado');
+                  if (item.label.includes('Cocodrilo')) setSelectedType('cocodrilos');
+                  if (item.label.includes('Semáforo')) setSelectedType('semaforos');
+                  setShowFormModal(true);
+                  voiceService.speak(`Dictado cargado para ${item.label.slice(3)}. Puedes verificar y confirmar.`);
+                }}
+                className="bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-cyan-300 px-2.5 py-2 rounded-xl border border-slate-800 hover:border-cyan-600/60 transition cursor-pointer text-xs font-semibold text-center truncate active:scale-95"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -504,38 +474,68 @@ export const CitizenReportModule: React.FC<CitizenReportModuleProps> = ({
         </div>
       )}
 
-      {/* Quick Category Report Grid */}
-      <div>
-        <h3 className="text-sm font-bold text-slate-300 mb-3 flex items-center gap-1.5">
-          <Sparkles className="w-4 h-4 text-cyan-400" />
-          ¿Qué deseas reportar hoy en el puerto?
-        </h3>
+      {/* Quick Category Report Grid (Icon-Rich & Eye-Friendly) */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs sm:text-sm font-black text-white flex items-center gap-2">
+            <span>✨</span>
+            <span>Toca lo que deseas reportar para abrir el formulario:</span>
+          </h3>
+          <span className="text-[11px] text-slate-400 hidden sm:inline">8 categorías municipales</span>
+        </div>
+
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          {reportTypes.map((item) => (
-            <button
-              key={item.type}
-              onClick={() => handleOpenFormWithType(item.type)}
-              className="bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-cyan-500/60 rounded-xl p-3 text-left transition flex flex-col justify-between h-24 group shadow"
-            >
-              <span className="text-2xl group-hover:scale-110 transition transform">{item.icon}</span>
-              <div>
-                <span className="text-xs font-bold text-white block group-hover:text-cyan-300 transition">
-                  {item.label}
-                </span>
-                <span className="text-[10px] text-slate-400 capitalize">
-                  Prioridad: {item.defaultUrgency}
-                </span>
-              </div>
-            </button>
-          ))}
+          {reportTypes.map((item) => {
+            const colorMap: Record<string, string> = {
+              baches: 'hover:border-amber-400 hover:shadow-amber-500/10 from-amber-950/20',
+              alumbrado: 'hover:border-yellow-400 hover:shadow-yellow-500/10 from-yellow-950/20',
+              basura: 'hover:border-emerald-400 hover:shadow-emerald-500/10 from-emerald-950/20',
+              semaforos: 'hover:border-orange-400 hover:shadow-orange-500/10 from-orange-950/20',
+              senalamientos: 'hover:border-cyan-400 hover:shadow-cyan-500/10 from-cyan-950/20',
+              cocodrilos: 'hover:border-teal-400 hover:shadow-teal-500/10 from-teal-950/20',
+              ambulantes: 'hover:border-indigo-400 hover:shadow-indigo-500/10 from-indigo-950/20',
+              delincuencia: 'hover:border-rose-400 hover:shadow-rose-500/10 from-rose-950/20',
+            };
+            const accent = colorMap[item.type] || 'hover:border-cyan-400 from-cyan-950/20';
+
+            return (
+              <button
+                key={item.type}
+                onClick={() => handleOpenFormWithType(item.type)}
+                className={`bg-gradient-to-b ${accent} to-slate-900 border border-slate-800 rounded-2xl p-3.5 text-left transition-all duration-200 flex flex-col justify-between min-h-[5.75rem] group shadow-md active:scale-95 cursor-pointer`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl group-hover:scale-125 transition-transform">{item.icon}</span>
+                  <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase ${
+                    item.defaultUrgency === 'critica'
+                      ? 'bg-red-950 text-red-300 border border-red-800'
+                      : item.defaultUrgency === 'alta'
+                      ? 'bg-amber-950 text-amber-300 border border-amber-800'
+                      : 'bg-slate-950 text-slate-400 border border-slate-800'
+                  }`}>
+                    {item.defaultUrgency}
+                  </span>
+                </div>
+                <div className="mt-2">
+                  <span className="text-xs font-bold text-white block group-hover:text-cyan-300 transition line-clamp-1">
+                    {item.label}
+                  </span>
+                  <span className="text-[10px] text-cyan-400 font-semibold flex items-center gap-1 mt-0.5">
+                    <span>Reportar</span>
+                    <span>→</span>
+                  </span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Filter Chips & Reports List */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <span>Incidencias Registradas en Lázaro Cárdenas ({filteredReports.length})</span>
+      <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 border-b border-slate-800 pb-3">
+          <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+            <span>Incidencias Registradas ({filteredReports.length})</span>
           </h3>
 
           {/* Type Filters */}
@@ -567,7 +567,7 @@ export const CitizenReportModule: React.FC<CitizenReportModuleProps> = ({
         </div>
 
         {/* Reports Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {filteredReports.map((report) => (
             <div
               key={report.id}
@@ -621,14 +621,14 @@ export const CitizenReportModule: React.FC<CitizenReportModuleProps> = ({
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1.5 mt-2">
+                <div className="flex flex-col gap-1 mt-2">
                   <button
                     type="button"
                     onClick={() => setSelectedReportForDetail(report)}
-                    className="w-full py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-slate-950 font-black rounded-xl text-xs flex items-center justify-center gap-1.5 transition shadow-lg cursor-pointer"
+                    className="w-full py-1.5 px-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-slate-950 font-black rounded-lg text-[11px] flex items-center justify-center gap-1 transition shadow cursor-pointer"
                   >
-                    <FileText className="w-3.5 h-3.5" />
-                    <span>Ver Ficha de Evidencia Oficial</span>
+                    <FileText className="w-3 h-3" />
+                    <span>Ver Ficha de Evidencia</span>
                   </button>
 
                   <button
@@ -637,11 +637,11 @@ export const CitizenReportModule: React.FC<CitizenReportModuleProps> = ({
                       toneGenerator.playSuccessBeep();
                       setPrintPreviewReport(report);
                     }}
-                    className="w-full py-1.5 bg-slate-900 hover:bg-slate-800 text-emerald-300 hover:text-white font-semibold rounded-lg text-[11px] border border-slate-800 hover:border-emerald-700/60 flex items-center justify-center gap-1.5 transition cursor-pointer"
-                    title="Ver vista previa de cómo se verá el reporte y poder imprimirlo"
+                    className="w-full py-1 px-2 bg-slate-900 hover:bg-slate-800 text-emerald-300 hover:text-white font-semibold rounded-md text-[10px] border border-slate-800 hover:border-emerald-700/60 flex items-center justify-center gap-1 transition cursor-pointer"
+                    title="Vista previa e imprimir"
                   >
-                    <Printer className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Vista Previa e Imprimir</span>
+                    <Printer className="w-3 h-3 text-emerald-400" />
+                    <span>Imprimir Ficha</span>
                   </button>
 
                   <a
@@ -652,11 +652,11 @@ export const CitizenReportModule: React.FC<CitizenReportModuleProps> = ({
                       toneGenerator.playSuccessBeep();
                       onCenterMap(report.coords);
                     }}
-                    className="w-full py-1.5 bg-slate-900 hover:bg-slate-800 text-cyan-300 hover:text-white font-semibold rounded-lg text-[11px] border border-slate-800 hover:border-cyan-700/60 flex items-center justify-center gap-1.5 transition cursor-pointer"
+                    className="w-full py-1 px-2 bg-slate-900 hover:bg-slate-800 text-cyan-300 hover:text-white font-semibold rounded-md text-[10px] border border-slate-800 hover:border-cyan-700/60 flex items-center justify-center gap-1 transition cursor-pointer"
                   >
-                    <MapPin className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>Ver en Google Maps Satelital</span>
-                    <ExternalLink className="w-3 h-3 opacity-70 ml-0.5" />
+                    <MapPin className="w-3 h-3 text-cyan-400" />
+                    <span>Ver Google Maps</span>
+                    <ExternalLink className="w-2.5 h-2.5 opacity-70 ml-0.5" />
                   </a>
                 </div>
               </div>

@@ -149,10 +149,10 @@ export const VoiceAssistantBar: React.FC<VoiceAssistantBarProps> = ({
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-[1500] flex flex-col items-end">
+    <div className="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-[1500] flex flex-col items-end max-w-[calc(100vw-2rem)]">
       {/* ===================== EXPANDED VOICE ASSISTANT MODAL / PANEL ===================== */}
       {isExpanded && (
-        <div className="mb-3 w-80 sm:w-96 bg-slate-900/95 border-2 border-cyan-500/90 rounded-2xl p-4 shadow-2xl backdrop-blur-2xl text-xs space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="mb-3 w-[calc(100vw-2rem)] sm:w-96 max-w-sm bg-slate-900/95 border-2 border-cyan-500/90 rounded-2xl p-3.5 sm:p-4 shadow-2xl backdrop-blur-2xl text-xs space-y-3 animate-in fade-in slide-from-bottom-4 duration-200">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
             <div className="flex items-center gap-2">

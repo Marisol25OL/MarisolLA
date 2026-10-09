@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Coordinates, TransitRoute, TransitUnit } from '../types';
+import { Coordinates, TransitRoute, TransitUnit, Language } from '../types';
 import { 
   Search, 
   MapPin, 
@@ -15,6 +15,7 @@ import {
   LocateFixed
 } from 'lucide-react';
 import { toneGenerator, voiceService } from '../services/voiceAssistant';
+import { TOURIST_I18N, t } from '../i18n/touristTranslations';
 
 export interface DestinationPlace {
   id: string;
@@ -256,6 +257,7 @@ interface RouteSearchEngineProps {
     instructions: string[];
   }) => void;
   onOpen3DView?: (unit?: TransitUnit) => void;
+  currentLanguage?: Language;
 }
 
 export const RouteSearchEngine: React.FC<RouteSearchEngineProps> = ({
@@ -265,6 +267,7 @@ export const RouteSearchEngine: React.FC<RouteSearchEngineProps> = ({
   units,
   onRouteCalculated,
   onOpen3DView,
+  currentLanguage = 'es',
 }) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedPlace, setSelectedPlace] = useState<DestinationPlace | null>(null);
@@ -370,16 +373,33 @@ export const RouteSearchEngine: React.FC<RouteSearchEngineProps> = ({
       walkingPath: [currentOrigin, boardStop.coords],
       transitPath: targetRoute.waypoints,
       destinationName: place.name,
-      instructions: [
+      instructions: currentLanguage === 'en' ? [
+        `Walk 85m to stop ${boardStop.name}`,
+        `Board combi ${targetRoute.name} (Unit ${targetUnit.unitNumber})`,
+        `Alight at ${alightStop.name}`,
+      ] : currentLanguage === 'fr' ? [
+        `Marchez 85m jusqu'à l'arrêt ${boardStop.name}`,
+        `Montez dans le combi ${targetRoute.name} (Unité ${targetUnit.unitNumber})`,
+        `Descendez à ${alightStop.name}`,
+      ] : currentLanguage === 'zh' ? [
+        `步行 85 米前往 ${boardStop.name} 站点`,
+        `搭乘 ${targetRoute.name} 公交（车辆编号 ${targetUnit.unitNumber}）`,
+        `在 ${alightStop.name} 站点下车`,
+      ] : [
         `Camina 85m hacia la parada ${boardStop.name}`,
         `Aborda la combi ${targetRoute.name} (Unidad ${targetUnit.unitNumber})`,
         `Desciende en ${alightStop.name}`,
       ],
     });
 
-    voiceService.speak(
-      `Para ir a ${place.name}, toma la combi ${targetRoute.name}. La próxima unidad llega en ${targetUnit.etaMinutes} minutos.`
-    );
+    const voiceMsg: Record<Language, { text: string; langCode: string }> = {
+      es: { text: `Para ir a ${place.name}, toma la combi ${targetRoute.name}. La próxima unidad llega en ${targetUnit.etaMinutes} minutos.`, langCode: 'es-MX' },
+      en: { text: `To go to ${place.name}, take combi ${targetRoute.name}. Next vehicle arrives in ${targetUnit.etaMinutes} minutes.`, langCode: 'en-US' },
+      fr: { text: `Pour aller à ${place.name}, prenez le combi ${targetRoute.name}. La prochaine unité arrive dans ${targetUnit.etaMinutes} minutes.`, langCode: 'fr-FR' },
+      zh: { text: `前往 ${place.name}，请搭乘 ${targetRoute.name}。下一班车辆将在 ${targetUnit.etaMinutes} 分钟后到达。`, langCode: 'zh-CN' },
+    };
+    const vm = voiceMsg[currentLanguage] || voiceMsg.es;
+    voiceService.speak(vm.text, vm.langCode);
   };
 
   return (
@@ -388,14 +408,14 @@ export const RouteSearchEngine: React.FC<RouteSearchEngineProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div>
           <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-cyan-500 text-slate-950 uppercase">
-            PLANIFICADOR DE VIAJE & NAVEGACIÓN
+            {t('planner_badge', currentLanguage)}
           </span>
           <h3 className="text-base font-bold text-white mt-1 flex items-center gap-2">
             <Search className="w-5 h-5 text-cyan-400" />
-            ¿A dónde vas en Lázaro Cárdenas?
+            {t('planner_title', currentLanguage)}
           </h3>
           <p className="text-xs text-slate-400">
-            Te decimos exactamente qué combi o camión tomar, dónde subirte y en cuántos minutos llega.
+            {t('planner_desc', currentLanguage)}
           </p>
         </div>
 
@@ -406,7 +426,7 @@ export const RouteSearchEngine: React.FC<RouteSearchEngineProps> = ({
           className="bg-slate-950 hover:bg-slate-800 text-cyan-400 border border-cyan-700/80 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition hover:scale-105 shrink-0 shadow"
         >
           <LocateFixed className={`w-4 h-4 ${isGettingGps ? 'animate-spin' : 'text-cyan-400'}`} />
-          <span>{isGettingGps ? 'Detectando GPS...' : userLocation ? 'Mi GPS Detectado ✓' : 'Detectar Mi Ubicación'}</span>
+          <span>{isGettingGps ? t('btn_updating_gps', currentLanguage) : userLocation ? t('gps_active', currentLanguage) + ' ✓' : t('btn_use_gps', currentLanguage)}</span>
         </button>
       </div>
 
@@ -416,52 +436,75 @@ export const RouteSearchEngine: React.FC<RouteSearchEngineProps> = ({
         </div>
       )}
 
-      {/* ORIGIN SELECTOR ROW */}
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <span className="text-slate-400 font-semibold flex items-center gap-1">
-          <MapPin className="w-3.5 h-3.5 text-cyan-400" /> Origen:
-        </span>
-        <button
-          onClick={() => handleSetPresetOrigin({ lat: 17.9632, lng: -102.1985 }, 'Centro Lázaro Cárdenas')}
-          className="bg-slate-950 text-slate-300 hover:text-white px-2.5 py-1 rounded-lg border border-slate-800 hover:border-cyan-500 transition"
-        >
-          Centro
-        </button>
-        <button
-          onClick={() => handleSetPresetOrigin({ lat: 17.9942, lng: -102.2215 }, 'Las Guacamayas')}
-          className="bg-slate-950 text-slate-300 hover:text-white px-2.5 py-1 rounded-lg border border-slate-800 hover:border-cyan-500 transition"
-        >
-          Las Guacamayas
-        </button>
-        <button
-          onClick={() => handleSetPresetOrigin({ lat: 17.9540, lng: -102.1930 }, 'Malecón del Balsas')}
-          className="bg-slate-950 text-slate-300 hover:text-white px-2.5 py-1 rounded-lg border border-slate-800 hover:border-cyan-500 transition"
-        >
-          Malecón
-        </button>
-        <button
-          onClick={() => handleSetPresetOrigin({ lat: 17.9850, lng: -102.2175 }, 'Tecnológico')}
-          className="bg-slate-950 text-slate-300 hover:text-white px-2.5 py-1 rounded-lg border border-slate-800 hover:border-cyan-500 transition"
-        >
-          Tecnológico
-        </button>
-        <button
-          onClick={() => handleSetPresetOrigin({ lat: 17.9820, lng: -102.3520 }, 'Playa Azul')}
-          className="bg-slate-950 text-slate-300 hover:text-white px-2.5 py-1 rounded-lg border border-slate-800 hover:border-cyan-500 transition"
-        >
-          Playa Azul
-        </button>
+      {/* ORIGIN SELECTOR ROW (Icon-Rich & Intuitive) */}
+      <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-3 space-y-2">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <span className="text-slate-300 font-bold flex items-center gap-1.5 text-xs">
+            <MapPin className="w-4 h-4 text-cyan-400" />
+            <span>{t('origin_label', currentLanguage)}</span>
+          </span>
+          <span className="text-[11px] text-slate-400">
+            {userLocation ? '📍 GPS detectado' : 'Toca tu colonia o usa el GPS'}
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <button
+            type="button"
+            onClick={() => handleSetPresetOrigin({ lat: 17.9632, lng: -102.1985 }, 'Centro Lázaro Cárdenas')}
+            className="bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white px-3 py-1.5 rounded-lg border border-slate-800 hover:border-cyan-500 transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>🏙️</span>
+            <span>Centro</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSetPresetOrigin({ lat: 17.9942, lng: -102.2215 }, 'Las Guacamayas')}
+            className="bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white px-3 py-1.5 rounded-lg border border-slate-800 hover:border-cyan-500 transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>🏘️</span>
+            <span>Las Guacamayas</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSetPresetOrigin({ lat: 17.9540, lng: -102.1930 }, 'Malecón del Balsas')}
+            className="bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white px-3 py-1.5 rounded-lg border border-slate-800 hover:border-cyan-500 transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>🌊</span>
+            <span>Malecón</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSetPresetOrigin({ lat: 17.9850, lng: -102.2175 }, 'Tecnológico')}
+            className="bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white px-3 py-1.5 rounded-lg border border-slate-800 hover:border-cyan-500 transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>🎓</span>
+            <span>Tecnológico</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSetPresetOrigin({ lat: 17.9820, lng: -102.3520 }, 'Playa Azul')}
+            className="bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white px-3 py-1.5 rounded-lg border border-slate-800 hover:border-cyan-500 transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>🏖️</span>
+            <span>Playa Azul</span>
+          </button>
+        </div>
       </div>
 
       {/* SEARCH BAR INPUT */}
-      <div className="relative">
-        <div className="flex items-center gap-2 bg-slate-950 border-2 border-slate-700 focus-within:border-cyan-400 rounded-xl px-3 py-2.5 shadow-inner">
+      <div className="relative space-y-1.5">
+        <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+          <span>🏁</span>
+          <span>{t('destination_label', currentLanguage)}</span>
+        </label>
+        <div className="flex items-center gap-2.5 bg-slate-950 border-2 border-slate-700 focus-within:border-cyan-400 rounded-xl px-3.5 py-3 shadow-inner">
           <Search className="w-5 h-5 text-cyan-400 shrink-0" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar destino: Aduana, Hospital General, ArcelorMittal, Tecnológico, Playa Azul..."
+            placeholder={t('search_placeholder', currentLanguage)}
             className="w-full bg-transparent text-sm text-white placeholder-slate-500 focus:outline-none"
           />
           {searchQuery && (
@@ -471,33 +514,33 @@ export const RouteSearchEngine: React.FC<RouteSearchEngineProps> = ({
                 setSelectedPlace(null);
                 setCalculationResult(null);
               }}
-              className="text-xs text-slate-400 hover:text-white px-2"
+              className="text-xs text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-800 cursor-pointer"
             >
-              Borrar
+              ✕ Borrar
             </button>
           )}
         </div>
 
         {/* AUTOCOMPLETE POPUP LIST */}
         {matchingPlaces.length > 0 && !selectedPlace && (
-          <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-slate-950 border border-slate-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto divide-y divide-slate-800">
+          <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-slate-950 border-2 border-cyan-500/60 rounded-xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-slate-800">
             {matchingPlaces.map((place) => (
               <div
                 key={place.id}
                 onClick={() => handleSelectDestination(place)}
-                className="p-3 hover:bg-slate-900 cursor-pointer transition flex items-center justify-between gap-3 text-xs"
+                className="p-3.5 hover:bg-slate-900 cursor-pointer transition flex items-center justify-between gap-3 text-xs"
               >
                 <div>
                   <h4 className="font-bold text-white flex items-center gap-2">
-                    <span>{place.name}</span>
+                    <span>📍 {place.name}</span>
                     <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-cyan-300">
                       {place.category}
                     </span>
                   </h4>
                   <p className="text-slate-400 text-[11px] mt-0.5">{place.address}</p>
                 </div>
-                <span className="text-cyan-400 font-semibold text-[11px] shrink-0">
-                  Calcular Combi →
+                <span className="text-cyan-400 font-bold text-xs shrink-0 bg-cyan-950/80 px-2.5 py-1 rounded-lg border border-cyan-800">
+                  {t('btn_calculate', currentLanguage)} →
                 </span>
               </div>
             ))}
@@ -505,81 +548,117 @@ export const RouteSearchEngine: React.FC<RouteSearchEngineProps> = ({
         )}
       </div>
 
-      {/* QUICK DESTINATION PILLS */}
-      <div className="space-y-1.5">
-        <span className="text-[11px] text-slate-400">Destinos frecuentes en el Puerto:</span>
-        <div className="flex flex-wrap gap-1.5">
-          {LAZARO_PLACES.slice(0, 6).map((place) => (
-            <button
-              key={place.id}
-              onClick={() => handleSelectDestination(place)}
-              className="text-xs font-semibold bg-slate-950 text-slate-300 hover:text-cyan-300 hover:border-cyan-500/60 px-3 py-1.5 rounded-lg border border-slate-800 transition"
-            >
-              {place.name}
-            </button>
-          ))}
+      {/* QUICK DESTINATION TILES WITH ICONS */}
+      <div className="space-y-2">
+        <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+          <span>⚡</span>
+          <span>{t('popular_destinations', currentLanguage)}</span>
+        </span>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {[
+            { id: 'p-arcelor', label: 'ArcelorMittal', icon: '🏭', cat: 'Siderúrgica' },
+            { id: 'p-asipona', label: 'Puerto ASIPONA', icon: '⚓', cat: 'Recinto Portuario' },
+            { id: 'p-playa-azul', label: 'Playa Azul', icon: '🏖️', cat: 'Enramadas y Mar' },
+            { id: 'p-hosp-gen', label: 'Hospital General', icon: '🏥', cat: 'Salud 24h' },
+            { id: 'p-soriana-americas', label: 'Soriana / Plaza', icon: '🛒', cat: 'Comercial' },
+            { id: 'p-malecon', label: 'Malecón Balsas', icon: '🌊', cat: 'Turismo y Río' },
+          ].map((item) => {
+            const place = LAZARO_PLACES.find(p => p.id === item.id) || LAZARO_PLACES[0];
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => handleSelectDestination(place)}
+                className="bg-slate-950/80 hover:bg-slate-850 p-2.5 rounded-xl border border-slate-800 hover:border-cyan-400/80 transition cursor-pointer text-left group flex items-center gap-2.5 shadow-sm active:scale-[0.98]"
+              >
+                <span className="text-xl shrink-0 group-hover:scale-110 transition-transform">{item.icon}</span>
+                <div className="truncate">
+                  <p className="font-bold text-white text-xs group-hover:text-cyan-300 truncate">{item.label}</p>
+                  <p className="text-[10px] text-slate-400 truncate">{item.cat}</p>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* ===================== CALCULATION RESULT CARD ===================== */}
+      {/* ===================== CALCULATION RESULT CARD (Visual 3-Step Journey) ===================== */}
       {calculationResult && selectedPlace && (
-        <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-2 border-cyan-400/80 rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-300">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+        <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950/40 border-2 border-cyan-400 rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-300">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-800 pb-3">
             <div>
-              <span className="text-[10px] font-bold font-mono uppercase text-emerald-400">
-                COMBI RECOMENDADA DETECTADA
-              </span>
-              <h4 className="text-lg font-black text-white flex items-center gap-2">
-                <Bus className="w-5 h-5 text-cyan-400" />
-                {calculationResult.route.name}
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🎉</span>
+                <span className="text-xs font-black uppercase text-emerald-400 tracking-wider">
+                  {t('calc_result_title', currentLanguage)}
+                </span>
+              </div>
+              <h4 className="text-lg sm:text-xl font-black text-white flex items-center gap-2 mt-0.5">
+                <span>🚌</span>
+                <span>{calculationResult.route.name}</span>
               </h4>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-600 px-3 py-1 rounded-xl text-xs font-bold font-mono">
-                Tarifa: {calculationResult.fareMxn}
+              <span className="bg-emerald-500/20 text-emerald-300 border-2 border-emerald-500 px-3.5 py-1.5 rounded-xl text-xs font-black font-mono shadow-sm flex items-center gap-1.5">
+                <span>💵</span>
+                <span>{t('stat_fare', currentLanguage)}: {calculationResult.fareMxn}</span>
               </span>
             </div>
           </div>
 
-          {/* Step-by-Step Directions */}
+          {/* Step-by-Step Directions with Friendly Visual Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
             {/* Step 1: Walk to board stop */}
-            <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-              <span className="text-[10px] font-bold text-cyan-400 uppercase">Paso 1: Abordaje</span>
-              <p className="font-bold text-white">Camina {calculationResult.walkDistanceM}m a la parada:</p>
-              <p className="text-slate-300 font-semibold">{calculationResult.boardStop}</p>
+            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🚶‍♂️</span>
+                <span className="text-[11px] font-black text-cyan-400 uppercase tracking-wide">
+                  1. {t('stat_walk', currentLanguage)}
+                </span>
+              </div>
+              <p className="font-extrabold text-white text-sm">Camina {calculationResult.walkDistanceM} metros:</p>
+              <p className="text-slate-300 font-medium">📍 Parada: <strong>{calculationResult.boardStop}</strong></p>
             </div>
 
             {/* Step 2: Next Combi arriving */}
-            <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-              <span className="text-[10px] font-bold text-amber-400 uppercase">Paso 2: En Camino</span>
-              <p className="font-bold text-white">Combi {calculationResult.nearestUnit.unitNumber}</p>
-              <p className="text-emerald-400 font-mono font-bold flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5" />
-                Llegando en {calculationResult.nearestUnit.etaMinutes} min a la parada
+            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🚐</span>
+                <span className="text-[11px] font-black text-amber-400 uppercase tracking-wide">
+                  2. {t('stat_unit', currentLanguage)}
+                </span>
+              </div>
+              <p className="font-extrabold text-white text-sm">Combi {calculationResult.nearestUnit.unitNumber}</p>
+              <p className="text-emerald-400 font-mono font-bold flex items-center gap-1 text-xs">
+                <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Llega en ~{calculationResult.nearestUnit.etaMinutes} min</span>
               </p>
             </div>
 
             {/* Step 3: Alight stop & arrival */}
-            <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-              <span className="text-[10px] font-bold text-emerald-400 uppercase">Paso 3: Destino</span>
-              <p className="font-bold text-white">Desciende en:</p>
-              <p className="text-slate-300 font-semibold">{calculationResult.alightStop}</p>
-              <p className="text-[11px] text-slate-400">Tiempo de viaje: ~{calculationResult.travelMinutes} min</p>
+            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🏁</span>
+                <span className="text-[11px] font-black text-emerald-400 uppercase tracking-wide">
+                  3. {t('step_alight', currentLanguage)}
+                </span>
+              </div>
+              <p className="font-extrabold text-white text-sm">Baja en {calculationResult.alightStop}</p>
+              <p className="text-slate-300 text-xs">⏱️ {t('stat_travel_time', currentLanguage)}: ~{calculationResult.travelMinutes} min</p>
             </div>
           </div>
 
-          {/* Action Buttons: Map plot indication */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-            <div className="text-xs text-cyan-300 font-semibold flex items-center gap-1.5">
+          {/* Action Footer: Satellite Map Indication */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/80">
+            <div className="text-xs text-cyan-300 font-bold flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-cyan-400" />
-              <span>Ruta de combi y tramo peatonal trazados sobre el mapa satelital</span>
+              <span>{t('btn_view_on_satellite_map', currentLanguage)} (trazo azul activo abajo)</span>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono text-emerald-400 bg-emerald-950/80 px-3 py-1 rounded-lg border border-emerald-700/60">
-                ✓ Trayectoria Activa
+              <span className="text-[11px] font-mono text-emerald-300 bg-emerald-950/80 px-3 py-1 rounded-lg border border-emerald-700/80 font-bold">
+                ✓ Recorrido Trazado en Vivo
               </span>
             </div>
           </div>

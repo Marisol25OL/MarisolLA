@@ -216,7 +216,7 @@ export const SmartMap: React.FC<SmartMapProps> = ({
   }, [routes, selectedRouteId]);
 
   return (
-    <div className="relative w-full h-full min-h-[440px] rounded-xl overflow-hidden shadow-2xl bg-slate-950">
+    <div className="relative w-full h-full rounded-xl overflow-hidden shadow-2xl bg-slate-950">
       {/* Top Map Type Toolbar */}
       <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-slate-900/90 backdrop-blur-md p-1.5 rounded-xl border border-slate-700/80 shadow-lg text-xs">
         <span className="text-slate-400 font-bold px-1.5 flex items-center gap-1 text-[11px]">
