@@ -1,0 +1,10 @@
+{
+  "name": "Lázaro Smart-Port | Plataforma Smart City",
+  "description": "Plataforma integral de Ciudad Inteligente y Puerto Sustentable para Lázaro Cárdenas: movilidad en tiempo real, turismo portuario, seguridad ciudadana, reportes urbanos y asistente de voz inclusivo.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation",
+    "microphone"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

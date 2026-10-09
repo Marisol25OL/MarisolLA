@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 580" fill="none">
+  <!-- Defs & Filters -->
+  <defs>
+    <!-- Outer Pin Gradient -->
+    <linearGradient id="pinBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00C4D4" />
+      <stop offset="50%" stop-color="#00A2B8" />
+      <stop offset="100%" stop-color="#007F94" />
+    </linearGradient>
+
+    <!-- Sun Glow Gradient -->
+    <linearGradient id="sunGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFC837" />
+      <stop offset="100%" stop-color="#F99F1B" />
+    </linearGradient>
+
+    <!-- Wave 1 (Upper) -->
+    <linearGradient id="wave1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#0EA5E9" />
+    </linearGradient>
+
+    <!-- Wave 2 (Middle) -->
+    <linearGradient id="wave2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+
+    <!-- Wave 3 (Bottom Deep Ocean) -->
+    <linearGradient id="wave3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0F4C6E" />
+      <stop offset="100%" stop-color="#0A364F" />
+    </linearGradient>
+
+    <!-- Shadow -->
+    <filter id="badgeShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#0A364F" flood-opacity="0.35" />
+    </filter>
+
+    <!-- Clip Path inside inner badge -->
+    <clipPath id="innerBadgeClip">
+      <path d="M 250 30 
+               C 365 30 455 120 455 235 
+               C 455 330 370 435 250 535 
+               C 130 435 45 330 45 235 
+               C 45 120 135 30 250 30 Z" />
+    </clipPath>
+  </defs>
+
+  <!-- Group with Shadow -->
+  <g filter="url(#badgeShadow)">
+    <!-- Outer Teardrop Pin Border -->
+    <path d="M 250 10 
+             C 380 10 480 110 480 238 
+             C 480 348 385 460 250 568 
+             C 115 460 20 348 20 238 
+             C 20 110 120 10 250 10 Z" 
+          fill="url(#pinBorder)" />
+
+    <!-- Inner Badge Base (Warm Cream Background) -->
+    <path d="M 250 30 
+             C 365 30 455 120 455 235 
+             C 455 330 370 435 250 535 
+             C 130 435 45 330 45 235 
+             C 45 120 135 30 250 30 Z" 
+          fill="#FAF9F5" />
+  </g>
+
+  <!-- Clipped Inner Artwork -->
+  <g clip-path="url(#innerBadgeClip)">
+    <!-- Golden Sun in the sky -->
+    <circle cx="260" cy="120" r="62" fill="url(#sunGrad)" />
+
+    <!-- City Skyline Silhouettes (Deep Navy #0A364F) -->
+    <!-- Building 1 (Left low block) -->
+    <rect x="200" y="215" width="36" height="60" fill="#0A364F" />
+
+    <!-- Building 2 (House with gabled roof) -->
+    <path d="M 230 255 L 230 180 L 255 160 L 280 180 L 280 255 Z" fill="#0A364F" />
+    <rect x="249" y="190" width="8" height="12" rx="1" fill="#FFFFFF" />
+
+    <!-- Building 3 (Tall modern tower) -->
+    <rect x="288" y="122" width="62" height="145" rx="3" fill="#0A364F" />
+    <!-- Windows grid in tall tower -->
+    <g fill="#FFFFFF" opacity="0.9">
+      <rect x="303" y="142" width="8" height="11" rx="1" />
+      <rect x="318" y="142" width="8" height="11" rx="1" />
+      <rect x="333" y="142" width="8" height="11" rx="1" />
+
+      <rect x="303" y="165" width="8" height="11" rx="1" />
+      <rect x="318" y="165" width="8" height="11" rx="1" />
+      <rect x="333" y="165" width="8" height="11" rx="1" />
+
+      <rect x="303" y="188" width="8" height="11" rx="1" />
+      <rect x="318" y="188" width="8" height="11" rx="1" />
+      <rect x="333" y="188" width="8" height="11" rx="1" />
+    </g>
+
+    <!-- Building 4 (Right medium block) -->
+    <rect x="358" y="195" width="40" height="75" fill="#0A364F" />
+
+    <!-- Island Mound / Coastline Ground -->
+    <path d="M 30 270 C 130 245 280 250 470 280 L 470 330 L 30 330 Z" fill="#0A364F" />
+
+    <!-- Palm Tree on the Left (Deep Navy) -->
+    <!-- Trunk -->
+    <path d="M 132 258 C 136 215 152 165 174 135 C 168 135 156 180 148 258 Z" fill="#0A364F" />
+    <!-- Frond 1 (Top Left) -->
+    <path d="M 172 135 C 145 110 110 120 95 150 C 115 145 140 145 172 135 Z" fill="#0A364F" />
+    <!-- Frond 2 (Far Left) -->
+    <path d="M 172 135 C 130 130 100 160 110 195 C 122 170 145 155 172 135 Z" fill="#0A364F" />
+    <!-- Frond 3 (Top Right) -->
+    <path d="M 172 135 C 195 105 230 115 240 140 C 220 135 195 138 172 135 Z" fill="#0A364F" />
+    <!-- Frond 4 (Far Right) -->
+    <path d="M 172 135 C 200 135 225 155 222 185 C 210 165 190 152 172 135 Z" fill="#0A364F" />
+    <!-- Frond 5 (Down Left) -->
+    <path d="M 172 135 C 150 145 130 175 140 205 C 148 185 158 165 172 135 Z" fill="#0A364F" />
+
+    <!-- Wavy White Gap 1 -->
+    <path d="M 30 285 C 120 260 260 305 470 280 L 470 300 C 260 325 120 280 30 305 Z" fill="#FFFFFF" />
+
+    <!-- Ocean Wave Layer 1 (Medium Cyan) -->
+    <path d="M 30 300 C 130 275 250 325 470 295 L 470 375 C 260 410 130 355 30 380 Z" fill="url(#wave1)" />
+
+    <!-- Wavy White Crest 2 -->
+    <path d="M 80 338 C 170 320 260 355 430 325 L 415 338 C 255 368 165 333 80 352 Z" fill="#FFFFFF" />
+
+    <!-- Ocean Wave Layer 2 (Teal Blue) -->
+    <path d="M 30 370 C 150 345 270 395 470 365 L 470 445 C 270 480 150 425 30 450 Z" fill="url(#wave2)" />
+
+    <!-- Wavy White Crest 3 -->
+    <path d="M 110 405 C 200 388 290 423 410 395 L 395 408 C 285 436 195 401 110 418 Z" fill="#FFFFFF" />
+
+    <!-- Ocean Wave Layer 3 (Deep Navy Bottom) -->
+    <path d="M 30 435 C 160 410 270 460 470 430 L 470 560 L 30 560 Z" fill="url(#wave3)" />
+  </g>
+</svg>
