@@ -30,6 +30,8 @@ import { ReportDetailModal } from './components/ReportDetailModal';
 import { ReportPrintPreviewModal } from './components/ReportPrintPreviewModal';
 import { LCNovaLogo } from './components/LCNovaLogo';
 import { LCNovaChatbot } from './components/LCNovaChatbot';
+import { DriverPanel } from './components/DriverPanel';
+import { LocatarioPanel } from './components/LocatarioPanel';
 import { offlineManager } from './services/offlineSync';
 import { toneGenerator, voiceService } from './services/voiceAssistant';
 import { 
@@ -41,12 +43,20 @@ import {
   Wifi, 
   WifiOff, 
   AlertOctagon, 
-  Sparkles
+  Sparkles,
+  Users
 } from 'lucide-react';
 
 export default function App() {
-  // Navigation: 4 core modules
-  const [activeTab, setActiveTab] = useState<'movilidad' | 'turismo' | 'seguridad' | 'reportes'>('movilidad');
+  // Primary 3-Panel Structure: 'turista' vs 'locatario' vs 'chofer'
+  const [mainPanel, setMainPanel] = useState<'turista' | 'locatario' | 'chofer'>('turista');
+
+  // Sub-Navigation within Panel Turista: 3 modules
+  const [activeTab, setActiveTab] = useState<'movilidad' | 'turismo' | 'seguridad'>('movilidad');
+
+  // Compact satellite map state (default: false = vista compacta más pequeña para los 3)
+  const [isMapExpanded, setIsMapExpanded] = useState<boolean>(false);
+
   const [showOfflineGuide, setShowOfflineGuide] = useState<boolean>(false);
   const [activeDetailReport, setActiveDetailReport] = useState<CitizenReport | null>(null);
   const [printPreviewReport, setPrintPreviewReport] = useState<CitizenReport | null>(null);
@@ -228,7 +238,7 @@ export default function App() {
     };
 
     handleAddReport(newReport);
-    setActiveTab('reportes');
+    setMainPanel('locatario');
     setHighlightCoords(newReport.coords);
     setActiveDetailReport(newReport);
     toneGenerator.playSuccessBeep();
@@ -327,56 +337,123 @@ export default function App() {
           </div>
         </div>
 
-        {/* ===================== MODULE TABS BAR ===================== */}
-        <div className="border-t border-slate-800/80 bg-slate-950/60 px-4 sm:px-6">
-          <div className="max-w-7xl mx-auto flex items-center gap-1 sm:gap-2 overflow-x-auto py-2 scrollbar-none">
-            <button
-              onClick={() => setActiveTab('movilidad')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition cursor-pointer ${
-                activeTab === 'movilidad'
-                  ? 'bg-cyan-500 text-slate-950 shadow-md font-bold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-              }`}
-            >
-              <Bus className="w-4 h-4" />
-              <span>1. Movilidad & Rutas (Combis GPS)</span>
-            </button>
+        {/* ===================== PRIMARY 3-PANEL NAVIGATION BAR ===================== */}
+        <div className="border-t border-slate-800 bg-slate-950/80 px-4 sm:px-6 py-2.5">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
+            {/* Main Panel Mode Switcher: 3 Panels */}
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                Panel:
+              </span>
+              <div className="inline-flex p-1 rounded-xl bg-slate-900 border border-slate-800 shadow-inner flex-wrap gap-1">
+                {/* 1. Panel Turista */}
+                <button
+                  onClick={() => {
+                    setMainPanel('turista');
+                    toneGenerator.playSuccessBeep();
+                  }}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition cursor-pointer ${
+                    mainPanel === 'turista'
+                      ? 'bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 shadow-md font-extrabold'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Anchor className="w-4 h-4" />
+                  <span>1. Panel Turista</span>
+                </button>
 
-            <button
-              onClick={() => setActiveTab('turismo')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition cursor-pointer ${
-                activeTab === 'turismo'
-                  ? 'bg-cyan-500 text-slate-950 shadow-md font-bold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-              }`}
-            >
-              <Anchor className="w-4 h-4" />
-              <span>2. Catálogo, Industrias & Turismo</span>
-            </button>
+                {/* 2. Panel Locatario (Ciudadano) */}
+                <button
+                  onClick={() => {
+                    setMainPanel('locatario');
+                    toneGenerator.playSuccessBeep();
+                    voiceService.speak('Panel del Locatario y Ciudadano activado. Reportes e incidencias disponibles.');
+                  }}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition cursor-pointer ${
+                    mainPanel === 'locatario'
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-md font-extrabold'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Users className="w-4 h-4" />
+                  <span>2. Panel Locatario (Ciudadano)</span>
+                </button>
 
-            <button
-              onClick={() => setActiveTab('seguridad')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition cursor-pointer ${
-                activeTab === 'seguridad'
-                  ? 'bg-cyan-500 text-slate-950 shadow-md font-bold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-              }`}
-            >
-              <Shield className="w-4 h-4" />
-              <span>3. Semáforo & Puntos Seguros</span>
-            </button>
+                {/* 3. Panel Chofer */}
+                <button
+                  onClick={() => {
+                    setMainPanel('chofer');
+                    toneGenerator.playSuccessBeep();
+                    voiceService.speak('Panel del chofer y operador de transporte activado.');
+                  }}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition cursor-pointer ${
+                    mainPanel === 'chofer'
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-md font-extrabold'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Bus className="w-4 h-4" />
+                  <span>3. Panel Chofer</span>
+                </button>
+              </div>
+            </div>
 
-            <button
-              onClick={() => setActiveTab('reportes')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition cursor-pointer ${
-                activeTab === 'reportes'
-                  ? 'bg-cyan-500 text-slate-950 shadow-md font-bold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-              }`}
-            >
-              <FileText className="w-4 h-4" />
-              <span>4. Reporte Ciudadano</span>
-            </button>
+            {/* Tourist Sub-tabs (Only when in Panel Turista: 3 modules) */}
+            {mainPanel === 'turista' && (
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1">
+                <button
+                  onClick={() => setActiveTab('movilidad')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition cursor-pointer ${
+                    activeTab === 'movilidad'
+                      ? 'bg-cyan-500 text-slate-950 shadow-md'
+                      : 'bg-slate-900/60 text-slate-300 hover:text-white border border-slate-800'
+                  }`}
+                >
+                  <Bus className="w-3.5 h-3.5" />
+                  <span>1. Combis, Movilidad & Rutas</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('turismo')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition cursor-pointer ${
+                    activeTab === 'turismo'
+                      ? 'bg-cyan-500 text-slate-950 shadow-md'
+                      : 'bg-slate-900/60 text-slate-300 hover:text-white border border-slate-800'
+                  }`}
+                >
+                  <Anchor className="w-3.5 h-3.5" />
+                  <span>2. Catálogo Industrias & Turismo</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('seguridad')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition cursor-pointer ${
+                    activeTab === 'seguridad'
+                      ? 'bg-cyan-500 text-slate-950 shadow-md'
+                      : 'bg-slate-900/60 text-slate-300 hover:text-white border border-slate-800'
+                  }`}
+                >
+                  <Shield className="w-3.5 h-3.5" />
+                  <span>3. Semáforo & Puntos Seguros</span>
+                </button>
+              </div>
+            )}
+
+            {/* Locatario indicator */}
+            {mainPanel === 'locatario' && (
+              <div className="flex items-center gap-2 text-xs text-emerald-400 font-mono bg-emerald-950/40 border border-emerald-800/80 px-3 py-1.5 rounded-xl">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span className="font-bold">MODO LOCATARIO: REPORTES CIUDADANOS, SOBRECUPO & VOZ</span>
+              </div>
+            )}
+
+            {/* Driver active indicator */}
+            {mainPanel === 'chofer' && (
+              <div className="flex items-center gap-2 text-xs text-amber-400 font-mono bg-amber-950/40 border border-amber-800/80 px-3 py-1.5 rounded-xl">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                <span className="font-bold">MODO CHOFER: TELEMETRÍA, AFORO & MECÁNICA</span>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -384,192 +461,265 @@ export default function App() {
       {/* ===================== MAIN CONTENT WRAPPER ===================== */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 space-y-6 pb-32">
         
-        {/* ===================== 1. PLANIFICADOR DE VIAJE EN LA PARTE SUPERIOR ===================== */}
-        <section>
-          <RouteSearchEngine
-            userLocation={userLocation}
-            onSetUserLocation={setUserLocation}
+        {/* ===================== PANEL 3: CHOFER & OPERADOR SEPARADO ===================== */}
+        {mainPanel === 'chofer' && (
+          <DriverPanel
             routes={routes}
             units={units}
-            onRouteCalculated={handleTraceRoute}
+            onUnitUpdate={(updated) => {
+              setUnits((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+            }}
+            onAddReinforcementUnit={(routeId) => {
+              const newUnit: TransitUnit = {
+                id: 'unit-rf-' + Date.now(),
+                routeId,
+                unitNumber: 'REI-' + Math.floor(10 + Math.random() * 90),
+                driverName: 'Refuerzo Municipal',
+                driverPhone: '753-532-1000',
+                coords: { lat: 17.9625, lng: -102.1990 },
+                speedKmH: 35,
+                occupancyPercent: 10,
+                status: 'reinforcement',
+                nextStop: 'Terminal Centro',
+                etaMinutes: 2,
+                lastUpdated: 'Justo ahora',
+              };
+              setUnits((prev) => [...prev, newUnit]);
+              voiceService.speak('Unidad de refuerzo despachada con éxito.');
+            }}
+            userLocation={userLocation}
           />
-        </section>
+        )}
 
-        {/* ===================== 2. MAPA INTERACTIVO ===================== */}
-        <section className="bg-slate-900/60 p-4 sm:p-5 rounded-3xl border border-slate-800 shadow-xl space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-                <h2 className="font-extrabold text-base sm:text-lg text-white">
-                  Mapa Satelital de Lázaro Cárdenas en Tiempo Real
-                </h2>
+        {/* ===================== PANEL 2: LOCATARIO & CIUDADANO SEPARADO ===================== */}
+        {mainPanel === 'locatario' && (
+          <LocatarioPanel
+            reports={reports}
+            routes={routes}
+            units={units}
+            onAddReport={handleAddReport}
+            onCenterMap={setHighlightCoords}
+            isOnline={isOnline}
+            userLocation={userLocation}
+            onAddReinforcementUnit={(routeId) => {
+              const newUnit: TransitUnit = {
+                id: 'unit-rf-' + Date.now(),
+                routeId,
+                unitNumber: 'REI-' + Math.floor(10 + Math.random() * 90),
+                driverName: 'Refuerzo Municipal',
+                driverPhone: '753-532-1000',
+                coords: { lat: 17.9625, lng: -102.1990 },
+                speedKmH: 35,
+                occupancyPercent: 10,
+                status: 'reinforcement',
+                nextStop: 'Terminal Centro',
+                etaMinutes: 2,
+                lastUpdated: 'Justo ahora',
+              };
+              setUnits((prev) => [...prev, newUnit]);
+              voiceService.speak('Unidad de refuerzo municipal despachada con éxito.');
+            }}
+            onViewReport={(rep) => setActiveDetailReport(rep)}
+          />
+        )}
+
+        {/* ===================== PANEL 1: TURISTA & MOVILIDAD ===================== */}
+        {mainPanel === 'turista' && (
+          <>
+            {/* 1. PLANIFICADOR DE VIAJE EN LA PARTE SUPERIOR */}
+            <section>
+              <RouteSearchEngine
+                userLocation={userLocation}
+                onSetUserLocation={setUserLocation}
+                routes={routes}
+                units={units}
+                onRouteCalculated={handleTraceRoute}
+              />
+            </section>
+
+            {/* 2. MAPA INTERACTIVO COMPACTO (MÁS PEQUEÑA LA VISTA PARA LOS 3) */}
+            <section className="bg-slate-900/60 p-4 sm:p-5 rounded-3xl border border-slate-800 shadow-xl space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                    <h2 className="font-extrabold text-sm sm:text-base text-white">
+                      Vista Satelital en Tiempo Real (Compacta para Movilidad, Turismo y Seguridad)
+                    </h2>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    Monitoreo GPS de combis, Puntos Naranja C5i y catálogo turístico
+                  </p>
+                </div>
+
+                {/* Quick Layer Filter Chips & Compact/Expand Toggle */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    onClick={() => setActiveLayers({ ...activeLayers, routes: !activeLayers.routes })}
+                    className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
+                      activeLayers.routes
+                        ? 'bg-cyan-950 text-cyan-300 border-cyan-700'
+                        : 'bg-slate-900 text-slate-500 border-slate-800'
+                    }`}
+                  >
+                    Rutas
+                  </button>
+
+                  <button
+                    onClick={() => setActiveLayers({ ...activeLayers, buses: !activeLayers.buses })}
+                    className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
+                      activeLayers.buses
+                        ? 'bg-emerald-950 text-emerald-300 border-emerald-700'
+                        : 'bg-slate-900 text-slate-500 border-slate-800'
+                    }`}
+                  >
+                    Combis GPS
+                  </button>
+
+                  <button
+                    onClick={() => setActiveLayers({ ...activeLayers, safetySemaforo: !activeLayers.safetySemaforo })}
+                    className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
+                      activeLayers.safetySemaforo
+                        ? 'bg-amber-950 text-amber-300 border-amber-700'
+                        : 'bg-slate-900 text-slate-500 border-slate-800'
+                    }`}
+                  >
+                    Semáforo
+                  </button>
+
+                  <button
+                    onClick={() => setActiveLayers({ ...activeLayers, safePoints: !activeLayers.safePoints })}
+                    className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
+                      activeLayers.safePoints
+                        ? 'bg-orange-950 text-orange-300 border-orange-700'
+                        : 'bg-slate-900 text-slate-500 border-slate-800'
+                    }`}
+                  >
+                    Puntos Naranja
+                  </button>
+
+                  {/* Toggle button to expand/collapse satellite map */}
+                  <button
+                    onClick={() => setIsMapExpanded(!isMapExpanded)}
+                    className="text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-slate-950 text-cyan-300 border-cyan-800 hover:border-cyan-600 transition cursor-pointer ml-1"
+                  >
+                    {isMapExpanded ? '▲ Vista Pequeña' : '▼ Expandir'}
+                  </button>
+                </div>
               </div>
-              <p className="text-xs text-slate-400">
-                Monitoreo GPS de combis en ruta, Puntos Naranja C5i y zonas seguras
-              </p>
-            </div>
 
-            {/* Quick Layer Filter Chips */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <button
-                onClick={() => setActiveLayers({ ...activeLayers, routes: !activeLayers.routes })}
-                className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
-                  activeLayers.routes
-                    ? 'bg-cyan-950 text-cyan-300 border-cyan-700'
-                    : 'bg-slate-900 text-slate-500 border-slate-800'
-                }`}
-              >
-                Rutas Combis
-              </button>
+              {/* Smaller/Compact Map View as requested */}
+              <div className={`${isMapExpanded ? 'h-[440px] sm:h-[480px]' : 'h-[230px] sm:h-[260px]'} rounded-2xl overflow-hidden border border-slate-800 relative transition-all duration-300`}>
+                <SmartMap
+                  routes={routes}
+                  units={units}
+                  safetyZones={safetyZones}
+                  safePoints={safePoints}
+                  reports={reports}
+                  selectedRouteId={selectedRouteId}
+                  activeLayers={activeLayers}
+                  highlightCoords={highlightCoords}
+                  userLocationCoords={userLocation}
+                  routePlannerCoords={routePlannerCoords}
+                  onSelectMapLocation={(coords) => setHighlightCoords(coords)}
+                  onSelectSafePoint={(point) => setHighlightCoords(point.coords)}
+                />
+              </div>
+            </section>
 
-              <button
-                onClick={() => setActiveLayers({ ...activeLayers, buses: !activeLayers.buses })}
-                className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
-                  activeLayers.buses
-                    ? 'bg-emerald-950 text-emerald-300 border-emerald-700'
-                    : 'bg-slate-900 text-slate-500 border-slate-800'
-                }`}
-              >
-                Unidades GPS
-              </button>
+            {/* 3. SUB-MODULE CONTENT FOR PANEL TURISTA (3 MODULES) */}
+            <section>
+              {activeTab === 'movilidad' && (
+                <MobilityModule
+                  routes={routes}
+                  units={units}
+                  selectedRouteId={selectedRouteId}
+                  userLocation={userLocation}
+                  onSetUserLocation={setUserLocation}
+                  onSelectRoute={setSelectedRouteId}
+                  onCenterMap={(coords) => setHighlightCoords(coords)}
+                  onUnitUpdate={(updated) => {
+                    setUnits((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+                  }}
+                  onAddReinforcementUnit={(routeId) => {
+                    const newUnit: TransitUnit = {
+                      id: 'unit-rf-' + Date.now(),
+                      routeId,
+                      unitNumber: 'REI-' + Math.floor(10 + Math.random() * 90),
+                      driverName: 'Refuerzo Municipal',
+                      driverPhone: '753-532-1000',
+                      coords: { lat: 17.9625, lng: -102.1990 },
+                      speedKmH: 35,
+                      occupancyPercent: 10,
+                      status: 'reinforcement',
+                      nextStop: 'Terminal Centro',
+                      etaMinutes: 2,
+                      lastUpdated: 'Justo ahora',
+                    };
+                    setUnits((prev) => [...prev, newUnit]);
+                    voiceService.speak('Unidad de refuerzo despachada con éxito.');
+                  }}
+                  onAddReport={handleAddReport}
+                />
+              )}
 
-              <button
-                onClick={() => setActiveLayers({ ...activeLayers, safetySemaforo: !activeLayers.safetySemaforo })}
-                className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
-                  activeLayers.safetySemaforo
-                    ? 'bg-amber-950 text-amber-300 border-amber-700'
-                    : 'bg-slate-900 text-slate-500 border-slate-800'
-                }`}
-              >
-                Semáforo Seguridad
-              </button>
+              {activeTab === 'turismo' && (
+                <PortTourismModule
+                  catalogItems={catalogItems}
+                  currentLanguage={currentLanguage}
+                  onLanguageChange={setCurrentLanguage}
+                  onSelectLocationOnMap={(coords) => setHighlightCoords(coords)}
+                  userLocation={userLocation}
+                  routes={routes}
+                  units={units}
+                />
+              )}
 
-              <button
-                onClick={() => setActiveLayers({ ...activeLayers, safePoints: !activeLayers.safePoints })}
-                className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
-                  activeLayers.safePoints
-                    ? 'bg-orange-950 text-orange-300 border-orange-700'
-                    : 'bg-slate-900 text-slate-500 border-slate-800'
-                }`}
-              >
-                Puntos Naranja
-              </button>
-            </div>
-          </div>
-
-          <div className="h-[460px] sm:h-[520px] rounded-2xl overflow-hidden border border-slate-800 relative">
-            <SmartMap
-              routes={routes}
-              units={units}
-              safetyZones={safetyZones}
-              safePoints={safePoints}
-              reports={reports}
-              selectedRouteId={selectedRouteId}
-              activeLayers={activeLayers}
-              highlightCoords={highlightCoords}
-              userLocationCoords={userLocation}
-              routePlannerCoords={routePlannerCoords}
-              onSelectMapLocation={(coords) => setHighlightCoords(coords)}
-              onSelectSafePoint={(point) => setHighlightCoords(point.coords)}
-            />
-          </div>
-        </section>
-
-        {/* ===================== 3. ACTIVE MODULE TAB CONTENT ===================== */}
-        <section>
-          {activeTab === 'movilidad' && (
-            <MobilityModule
-              routes={routes}
-              units={units}
-              selectedRouteId={selectedRouteId}
-              userLocation={userLocation}
-              onSetUserLocation={setUserLocation}
-              onSelectRoute={setSelectedRouteId}
-              onCenterMap={(coords) => setHighlightCoords(coords)}
-              onUnitUpdate={(updated) => {
-                setUnits((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
-              }}
-              onAddReinforcementUnit={(routeId) => {
-                const newUnit: TransitUnit = {
-                  id: 'unit-rf-' + Date.now(),
-                  routeId,
-                  unitNumber: 'REI-' + Math.floor(10 + Math.random() * 90),
-                  driverName: 'Refuerzo Municipal',
-                  driverPhone: '753-532-1000',
-                  coords: { lat: 17.9625, lng: -102.1990 },
-                  speedKmH: 35,
-                  occupancyPercent: 10,
-                  status: 'reinforcement',
-                  nextStop: 'Terminal Centro',
-                  etaMinutes: 2,
-                  lastUpdated: 'Justo ahora',
-                };
-                setUnits((prev) => [...prev, newUnit]);
-                voiceService.speak('Unidad de refuerzo despachada con éxito.');
-              }}
-              onAddReport={handleAddReport}
-            />
-          )}
-
-          {activeTab === 'turismo' && (
-            <PortTourismModule
-              catalogItems={catalogItems}
-              currentLanguage={currentLanguage}
-              onLanguageChange={setCurrentLanguage}
-              onSelectLocationOnMap={(coords) => setHighlightCoords(coords)}
-              userLocation={userLocation}
-              routes={routes}
-              units={units}
-            />
-          )}
-
-          {activeTab === 'seguridad' && (
-            <SafetyModule
-              safetyZones={safetyZones}
-              safePoints={safePoints}
-              currentLanguage={currentLanguage}
-              onCenterMap={setHighlightCoords}
-              onActivateSos={() => {
-                const nearest = safePoints[0];
-                setHighlightCoords(nearest.coords);
-              }}
-              userLocation={userLocation}
-            />
-          )}
-
-          {activeTab === 'reportes' && (
-            <CitizenReportModule
-              reports={reports}
-              onAddReport={handleAddReport}
-              onCenterMap={setHighlightCoords}
-              isOnline={isOnline}
-              userLocation={userLocation}
-            />
-          )}
-        </section>
+              {activeTab === 'seguridad' && (
+                <SafetyModule
+                  safetyZones={safetyZones}
+                  safePoints={safePoints}
+                  currentLanguage={currentLanguage}
+                  onCenterMap={setHighlightCoords}
+                  onActivateSos={() => {
+                    const nearest = safePoints[0];
+                    setHighlightCoords(nearest.coords);
+                  }}
+                  userLocation={userLocation}
+                />
+              )}
+            </section>
+          </>
+        )}
       </main>
 
-      {/* ===================== VOICE ASSISTANT FLOATING DOCK ===================== */}
-      <VoiceAssistantBar
-        currentLanguage={currentLanguage}
-        activeTab={activeTab}
-        onNavigateTab={(tab) => {
-          if (['movilidad', 'turismo', 'seguridad', 'reportes'].includes(tab)) {
-            setActiveTab(tab as any);
-          }
-        }}
-        onQuickAction={(action) => {
-          if (action === 'trigger_sos') {
-            const nearest = safePoints[0];
-            setHighlightCoords(nearest.coords);
-          }
-        }}
-        onAutoReportVoice={handleAutoReportVoice}
-        onSearchDestinationVoice={handleSearchDestinationVoice}
-        highContrast={highContrast}
-        onToggleHighContrast={() => setHighContrast(!highContrast)}
-      />
+      {/* ===================== VOICE ASSISTANT ONLY FOR CITIZEN REPORT (PANEL LOCATARIO) ===================== */}
+      {mainPanel === 'locatario' && (
+        <VoiceAssistantBar
+          currentLanguage={currentLanguage}
+          activeTab="reportes"
+          onNavigateTab={(tab) => {
+            if (['movilidad', 'turismo', 'seguridad', 'reportes'].includes(tab)) {
+              if (tab === 'reportes') {
+                setMainPanel('locatario');
+              } else {
+                setMainPanel('turista');
+                setActiveTab(tab as any);
+              }
+            }
+          }}
+          onQuickAction={(action) => {
+            if (action === 'trigger_sos') {
+              const nearest = safePoints[0];
+              setHighlightCoords(nearest.coords);
+            }
+          }}
+          onAutoReportVoice={handleAutoReportVoice}
+          onSearchDestinationVoice={handleSearchDestinationVoice}
+          highContrast={highContrast}
+          onToggleHighContrast={() => setHighContrast(!highContrast)}
+        />
+      )}
 
       {/* ===================== LC NOVA AI CHATBOT ===================== */}
       <LCNovaChatbot />

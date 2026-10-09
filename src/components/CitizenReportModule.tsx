@@ -22,7 +22,10 @@ import {
   Compass,
   Check,
   ExternalLink,
-  Printer
+  Printer,
+  Mic,
+  MicOff,
+  Radio
 } from 'lucide-react';
 import { toneGenerator, voiceService } from '../services/voiceAssistant';
 import { offlineManager } from '../services/offlineSync';
@@ -56,6 +59,11 @@ export const CitizenReportModule: React.FC<CitizenReportModuleProps> = ({
   const [urgency, setUrgency] = useState<CitizenReport['urgency']>('media');
   const [filterType, setFilterType] = useState<CitizenReportType | 'all'>('all');
   const [feedbackSuccess, setFeedbackSuccess] = useState<string | null>(null);
+
+  // Exclusive Voice Reporting States
+  const [isVoiceListening, setIsVoiceListening] = useState<boolean>(false);
+  const [voiceInterimText, setVoiceInterimText] = useState<string>('');
+  const [voiceFeedback, setVoiceFeedback] = useState<string | null>(null);
 
   // Live Camera states
   const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
@@ -147,7 +155,7 @@ export const CitizenReportModule: React.FC<CitizenReportModuleProps> = ({
 
       ctx.fillStyle = '#ffffff';
       ctx.font = `bold ${Math.max(16, Math.floor(barHeight * 0.26))}px sans-serif`;
-      ctx.fillText(`LC NOVA • EVIDENCIA GEO-VERIFICADA`, 20, canvas.height - barHeight + 28);
+      ctx.fillText(`LÁZARO SMART-PORT • EVIDENCIA GEO-VERIFICADA`, 20, canvas.height - barHeight + 28);
 
       ctx.fillStyle = '#facc15';
       ctx.font = `bold ${Math.max(14, Math.floor(barHeight * 0.23))}px monospace`;
@@ -234,14 +242,14 @@ export const CitizenReportModule: React.FC<CitizenReportModuleProps> = ({
       folio: `LC-2026-${Math.floor(1000 + Math.random() * 9000)}`,
       type: selectedType,
       title: title || `Reporte de ${selectedType}`,
-      description: description || 'Incidencia geolocalizada reportada por ciudadano mediante LC Nova.',
+      description: description || 'Incidencia geolocalizada reportada por ciudadano mediante Lázaro Smart-Port.',
       coords: currentCoords,
       address: address || 'Av. Melchor Ocampo esq. Av. Lázaro Cárdenas, Centro, Lázaro Cárdenas, Michoacán',
       photoUrl: photoUrl || 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=600&q=80',
       timestamp: 'Justo ahora',
       exactDate: dateStr,
       exactTime: timeStr,
-      headerTitle: 'LC NOVA • EVIDENCIA GEO-VERIFICADA',
+      headerTitle: 'LÁZARO SMART-PORT • EVIDENCIA GEO-VERIFICADA',
       status: 'recibido',
       urgency,
       upvotes: 1,
@@ -264,6 +272,68 @@ export const CitizenReportModule: React.FC<CitizenReportModuleProps> = ({
     setPhotoUrl(null);
   };
 
+  // Dedicated Voice Reporting Handler
+  const handleStartVoiceReport = () => {
+    if (isVoiceListening) {
+      voiceService.stopListening();
+      setIsVoiceListening(false);
+      return;
+    }
+
+    setVoiceFeedback('Escuchando... habla sobre la incidencia (ej. "Hay un bache grande en Melchor Ocampo" o "Cocodrilo en la orilla del estero").');
+    setIsVoiceListening(true);
+    setVoiceInterimText('');
+
+    const started = voiceService.startListening(
+      (interim) => {
+        setVoiceInterimText(interim);
+      },
+      (finalText, parsed) => {
+        setIsVoiceListening(false);
+        setVoiceInterimText('');
+
+        let detectedType: CitizenReportType = 'baches';
+        const lower = finalText.toLowerCase();
+        if (lower.includes('cocodrilo') || lower.includes('lagarto') || lower.includes('caimán')) {
+          detectedType = 'cocodrilos';
+        } else if (lower.includes('luz') || lower.includes('farola') || lower.includes('alumbrado') || lower.includes('oscura') || lower.includes('poste')) {
+          detectedType = 'alumbrado';
+        } else if (lower.includes('basura') || lower.includes('tiradero') || lower.includes('desecho') || lower.includes('escombro')) {
+          detectedType = 'basura';
+        } else if (lower.includes('semaforo') || lower.includes('semáforo')) {
+          detectedType = 'semaforos';
+        } else if (lower.includes('violencia') || lower.includes('asalto') || lower.includes('robo') || lower.includes('delito') || lower.includes('arma')) {
+          detectedType = 'delincuencia';
+        } else if (lower.includes('señal') || lower.includes('senalamiento') || lower.includes('letrero') || lower.includes('alto')) {
+          detectedType = 'senalamientos';
+        } else if (lower.includes('ambulante') || lower.includes('puesto') || lower.includes('calle')) {
+          detectedType = 'ambulantes';
+        }
+
+        setSelectedType(detectedType);
+        setTitle(parsed.reportTitle || `Reporte de ${detectedType} (Dictado por Voz)`);
+        setDescription(finalText);
+        setUrgency(detectedType === 'cocodrilos' || detectedType === 'delincuencia' ? 'critica' : 'media');
+        
+        setShowFormModal(true);
+        toneGenerator.playSuccessBeep();
+        voiceService.speak(`Incidencia de ${detectedType} registrada por voz. Completa los detalles o confirma tu reporte.`);
+        setVoiceFeedback(`¡Detectado!: "${finalText.slice(0, 90)}..."`);
+      },
+      (err) => {
+        setIsVoiceListening(false);
+        setVoiceFeedback(err);
+      },
+      () => {
+        setIsVoiceListening(false);
+      }
+    );
+
+    if (!started) {
+      setIsVoiceListening(false);
+    }
+  };
+
   const filteredReports = reports.filter((r) => {
     if (filterType === 'all') return true;
     return r.type === filterType;
@@ -283,17 +353,123 @@ export const CitizenReportModule: React.FC<CitizenReportModuleProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            setShowFormModal(true);
-            setPhotoUrl(null);
-            setIsCameraActive(false);
-          }}
-          className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-5 py-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition transform active:scale-95 shrink-0"
-        >
-          <Camera className="w-4 h-4" />
-          <span>+ Nuevo Reporte con Foto</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleStartVoiceReport}
+            className={`px-4 py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg transition cursor-pointer shrink-0 ${
+              isVoiceListening
+                ? 'bg-red-500 text-white animate-pulse shadow-red-500/50'
+                : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
+            }`}
+            title="Activar micrófono para dictar reporte ciudadano"
+          >
+            {isVoiceListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            <span>{isVoiceListening ? 'Detener Micrófono' : 'Dictar Reporte por Voz'}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setShowFormModal(true);
+              setPhotoUrl(null);
+              setIsCameraActive(false);
+            }}
+            className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition transform active:scale-95 shrink-0"
+          >
+            <Camera className="w-4 h-4" />
+            <span>+ Nuevo Reporte con Foto</span>
+          </button>
+        </div>
+      </div>
+
+      {/* EXCLUSIVE VOICE REPORTING DOCK (Only available in Citizen Reports) */}
+      <div className="bg-gradient-to-r from-cyan-950/70 via-slate-900 to-blue-950/70 border-2 border-cyan-500/50 rounded-2xl p-4 shadow-xl space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg shadow-md transition ${
+              isVoiceListening ? 'bg-red-500 text-white animate-pulse' : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
+            }`}>
+              <Mic className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-black text-white">
+                  Modo de Voz Exclusivo para Reporte Ciudadano
+                </span>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">
+                  RECONOCIMIENTO ACTIVO
+                </span>
+              </div>
+              <p className="text-xs text-slate-400">
+                Dicta tu reporte por voz: la IA detecta la categoría, ubicación y redacta el informe oficial.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleStartVoiceReport}
+            className={`font-black text-xs px-4 py-2.5 rounded-xl shadow-lg flex items-center justify-center gap-2 transition cursor-pointer ${
+              isVoiceListening
+                ? 'bg-red-600 text-white animate-pulse'
+                : 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-slate-950'
+            }`}
+          >
+            {isVoiceListening ? <Radio className="w-4 h-4 animate-ping" /> : <Mic className="w-4 h-4" />}
+            <span>{isVoiceListening ? 'Escuchando en vivo...' : 'Hablar al Micrófono'}</span>
+          </button>
+        </div>
+
+        {/* Live transcription / feedback readout */}
+        {(isVoiceListening || voiceInterimText || voiceFeedback) && (
+          <div className="bg-slate-950/90 border border-cyan-700/60 rounded-xl p-3 text-xs space-y-1">
+            {isVoiceListening && (
+              <div className="flex items-center gap-2 text-cyan-300 font-semibold animate-pulse">
+                <Radio className="w-3.5 h-3.5" />
+                <span>Escuchando... Di algo como: "Reportar bache en calle Galeana" o "Avistamiento de cocodrilo en el puente"</span>
+              </div>
+            )}
+            {voiceInterimText && (
+              <p className="text-white font-mono bg-slate-900 p-2 rounded border border-slate-800">
+                "{voiceInterimText}"
+              </p>
+            )}
+            {voiceFeedback && !voiceInterimText && (
+              <p className="text-cyan-200">
+                {voiceFeedback}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Quick Voice Shortcut Buttons */}
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800 text-[11px]">
+          <span className="text-slate-400 font-semibold">Dictado rápido:</span>
+          {[
+            { label: '🕳️ Dictar Bache', phrase: 'Reporte de bache profundo sobre avenida principal en Lázaro Cárdenas' },
+            { label: '💡 Dictar Alumbrado', phrase: 'Luminaria fundida y calle a oscuras sin alumbrado público' },
+            { label: '🐊 Dictar Cocodrilo', phrase: 'Avistamiento de cocodrilo cerca del estero en zona urbana' },
+            { label: '🚦 Dictar Semáforo', phrase: 'Semáforo descompuesto con luces intermitentes en cruce' },
+          ].map((item, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => {
+                toneGenerator.playSuccessBeep();
+                setDescription(item.phrase);
+                setTitle(item.label.slice(3) + ' (Dictado por Voz)');
+                if (item.label.includes('Bache')) setSelectedType('baches');
+                if (item.label.includes('Alumbrado')) setSelectedType('alumbrado');
+                if (item.label.includes('Cocodrilo')) setSelectedType('cocodrilos');
+                if (item.label.includes('Semáforo')) setSelectedType('semaforos');
+                setShowFormModal(true);
+                voiceService.speak(`Dictado cargado para ${item.label.slice(3)}. Puedes verificar y confirmar.`);
+              }}
+              className="bg-slate-950/80 hover:bg-slate-800 text-slate-300 hover:text-cyan-300 px-2.5 py-1 rounded-lg border border-slate-800 transition cursor-pointer"
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Success Notification */}
